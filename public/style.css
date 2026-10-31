@@ -27,3 +27,7 @@ nav div:hover .del { visibility:visible; }
 #toast { position:fixed; bottom:16px; right:16px; background:var(--panel); border:1px solid var(--accent); padding:10px 14px; border-radius:8px; opacity:0; transition:opacity .3s; }
 #toast.show { opacity:1; }
 @media (max-width:900px) { main { grid-template-columns:1fr; } nav { display:none; } }
+.item.grave { cursor:default; }
+.item .actions { margin-top:6px; }
+.item .actions button { padding:4px 10px; font-size:13px; }
+button.ghost { background:var(--panel); color:var(--text); border:1px solid var(--line); }

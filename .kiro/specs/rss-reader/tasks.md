@@ -7,5 +7,6 @@
 - [x] 5. Front end: three-pane UI, unread filter, keyboard shortcuts (R2, R3, R6)
 - [ ] 6. Auto-refresh every 30 min + "new items" toast (R4)
 - [ ] 7. Search across items
-- [ ] 8. "Graveyard" view: feeds that stopped publishing > 1 year, with option to revive or bury
-- [ ] 9. Demo video (≤ 3 min) + Devpost write-up describing Kiro usage
+- [x] 8. "Graveyard" view: feeds that stopped publishing > 1 year, with option to revive or bury
+- [x] 9a. Devpost write-up draft (`DEVPOST.md`) (R8)
+- [ ] 9b. Demo video (≤ 3 min)

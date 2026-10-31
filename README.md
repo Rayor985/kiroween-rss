@@ -12,6 +12,7 @@ Lazarus Reader is a lightweight, self-hosted RSS / Atom reader built for **Kirow
 - Keyboard navigation: `j` / `k` next / previous, `o` open, `m` toggle read
 - OPML import / export so you can bring your old Google Reader list back
 - Zero dependencies: plain Node.js server + vanilla JS front end
+- 🪦 Graveyard: see feeds silent for over a year, then Revive or Bury them
 - Haunted dark theme 🎃
 
 ## Quick start

@@ -74,6 +74,19 @@ async function refreshAll() {
   return { added, errors };
 }
 
+const DEAD_AFTER_DAYS = 365;
+
+function graveyard(now = Date.now()) {
+  return db.feeds
+    .map((f) => {
+      const last = db.items.filter((i) => i.feedId === f.id).reduce((m, i) => Math.max(m, i.published || 0), 0);
+      const days = last ? Math.floor((now - last) / 86400000) : null;
+      return { ...f, lastPublished: last || null, daysSilent: days };
+    })
+    .filter((f) => f.daysSilent === null || f.daysSilent > DEAD_AFTER_DAYS)
+    .sort((a, b) => (a.lastPublished || 0) - (b.lastPublished || 0));
+}
+
 function feedsWithCounts() {
   return db.feeds.map((f) => ({ ...f, unread: db.items.filter((i) => i.feedId === f.id && !i.read).length }));
 }
@@ -112,6 +125,15 @@ const server = http.createServer(async (req, res) => {
       store.save(db);
       return send(res, 200, { ok: true });
     }
+    m = p.match(/^\/api\/feeds\/([\w-]+)\/revive$/);
+    if (m && req.method === 'POST') {
+      const f = db.feeds.find((x) => x.id === m[1]);
+      if (!f) return send(res, 404, { error: 'Not found' });
+      const added = mergeItems(f, await fetchFeed(f.url));
+      store.save(db);
+      return send(res, 200, { added, stillDead: graveyard().some((g) => g.id === f.id) });
+    }
+    if (p === '/api/graveyard' && req.method === 'GET') return send(res, 200, graveyard());
     if (p === '/api/refresh' && req.method === 'POST') return send(res, 200, await refreshAll());
     if (p === '/api/items' && req.method === 'GET') {
       const feedId = u.searchParams.get('feed');
@@ -156,4 +178,4 @@ if (require.main === module) {
   setInterval(() => refreshAll().catch(() => {}), REFRESH_MS).unref();
 }
 
-module.exports = { server, subscribe, refreshAll };
+module.exports = { server, subscribe, refreshAll, graveyard, db, DEAD_AFTER_DAYS };

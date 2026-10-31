@@ -22,3 +22,6 @@ Server strips `<script>`, `<style>`, `<iframe>`, `on*=` attributes and `javascri
 
 ## UI
 Three panes: feeds sidebar · item list · reader. Dark "graveyard" theme, accent pumpkin orange #ff7518.
+
+## Graveyard (R8)
+`GET /api/graveyard` computes, per feed, `lastPublished = max(item.published)` and `daysSilent`; feeds with `daysSilent > 365` or no items are returned. `POST /api/feeds/:id/revive` re-fetches one feed and returns `{ added, stillDead }`. Bury reuses `DELETE /api/feeds/:id`. UI: a "🪦 Graveyard" entry in the sidebar swaps the item list for tombstone cards with Revive / Bury buttons.

@@ -28,3 +28,9 @@
 
 ## R7 Safety
 - The system SHALL render feed content with scripts, iframes and event handlers removed.
+
+## R8 Graveyard
+**User story:** As a reader, I want to see which of my feeds have died so that I can revive or bury them.
+- The system SHALL list feeds whose newest item is older than 365 days, or that have no items, oldest first.
+- WHEN the user clicks Revive THEN the system SHALL re-fetch that feed and report whether it is still dead.
+- WHEN the user clicks Bury and confirms THEN the system SHALL unsubscribe the feed and delete its items.

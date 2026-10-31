@@ -1,6 +1,6 @@
 'use strict';
 const $ = (s) => document.querySelector(s);
-const state = { feeds: [], items: [], feed: null, idx: -1 };
+const state = { feeds: [], items: [], feed: null, idx: -1, graveyard: false };
 
 const api = async (path, opts = {}) => {
   const res = await fetch(path, opts);
@@ -16,11 +16,23 @@ async function loadFeeds() {
   state.feeds = await api('/api/feeds');
   const total = state.feeds.reduce((n, f) => n + f.unread, 0);
   $('#feeds').innerHTML =
-    `<div data-id="" class="${state.feed ? '' : 'active'}"><span>🌕 All feeds</span><span class="count">${total || ''}</span></div>` +
-    state.feeds.map((f) => `<div data-id="${f.id}" class="${state.feed === f.id ? 'active' : ''}"><span>${esc(f.title)}</span><span><span class="count">${f.unread || ''}</span> <span class="del" data-del="${f.id}">✕</span></span></div>`).join('');
+    `<div data-id="" class="${state.feed || state.graveyard ? '' : 'active'}"><span>🌕 All feeds</span><span class="count">${total || ''}</span></div>` +
+    state.feeds.map((f) => `<div data-id="${f.id}" class="${state.feed === f.id ? 'active' : ''}"><span>${esc(f.title)}</span><span><span class="count">${f.unread || ''}</span> <span class="del" data-del="${f.id}">✕</span></span></div>`).join('') +
+    `<div data-grave="1" class="${state.graveyard ? 'active' : ''}"><span>🪦 Graveyard</span></div>`;
+}
+
+async function loadGraveyard() {
+  const dead = await api('/api/graveyard');
+  $('#items').innerHTML =
+    '<p class="empty" style="padding:14px">Feeds silent for over a year. Try to revive them, or lay them to rest.</p>' +
+    (dead.length
+      ? dead.map((f) => `<div class="item grave"><div>🪦 ${esc(f.title)}</div><div class="meta">${f.lastPublished ? `Last words ${new Date(f.lastPublished).toLocaleDateString()} · silent ${f.daysSilent} days` : 'Never spoke'}</div><div class="actions"><button data-revive="${f.id}">⚡ Revive</button> <button class="ghost" data-bury="${f.id}">⚰️ Bury</button></div></div>`).join('')
+      : '<p class="empty" style="padding:14px">The graveyard is empty. All your feeds are alive. 🎃</p>');
+  $('#reader').innerHTML = '<p class="empty">RIP. Every feed here once mattered to someone.</p>';
 }
 
 async function loadItems() {
+  if (state.graveyard) return loadGraveyard();
   const q = new URLSearchParams();
   if (state.feed) q.set('feed', state.feed);
   if ($('#unread-only').checked) q.set('unread', '1');
@@ -73,15 +85,36 @@ $('#feeds').addEventListener('click', async (e) => {
     await api('/api/feeds/' + del, { method: 'DELETE' });
     if (state.feed === del) state.feed = null;
   } else {
-    const row = e.target.closest('[data-id]');
-    if (!row) return;
-    state.feed = row.dataset.id || null;
+    if (e.target.closest('[data-grave]')) { state.graveyard = true; state.feed = null; }
+    else {
+      const row = e.target.closest('[data-id]');
+      if (!row) return;
+      state.graveyard = false;
+      state.feed = row.dataset.id || null;
+    }
   }
   state.idx = -1;
   await loadFeeds(); await loadItems();
 });
 
-$('#items').addEventListener('click', (e) => { const row = e.target.closest('.item'); if (row) show(+row.dataset.i); });
+$('#items').addEventListener('click', async (e) => {
+  const rev = e.target.dataset.revive, bury = e.target.dataset.bury;
+  if (rev) {
+    toast('⚡ Attempting resurrection…');
+    try {
+      const r = await api(`/api/feeds/${rev}/revive`, { method: 'POST' });
+      toast(r.stillDead ? 'Still no pulse. It stays in the graveyard.' : `🧟 It lives! ${r.added} new post(s)`);
+    } catch (err) { toast('⚠️ ' + err.message); }
+    await loadFeeds(); return loadItems();
+  }
+  if (bury) {
+    if (!confirm('Lay this feed to rest for good?')) return;
+    await api('/api/feeds/' + bury, { method: 'DELETE' });
+    toast('⚰️ Buried. Rest in peace.');
+    await loadFeeds(); return loadItems();
+  }
+});
+$('#items').addEventListener('click', (e) => { if (state.graveyard) return; const row = e.target.closest('.item'); if (row) show(+row.dataset.i); });
 $('#unread-only').addEventListener('change', () => { state.idx = -1; loadItems(); });
 $('#refresh').addEventListener('click', refresh);
 $('#opml').addEventListener('change', async (e) => {
@@ -94,7 +127,7 @@ $('#opml').addEventListener('change', async (e) => {
 });
 
 document.addEventListener('keydown', (e) => {
-  if (e.target.tagName === 'INPUT') return;
+  if (e.target.tagName === 'INPUT' || state.graveyard) return;
   if (e.key === 'j') show(state.idx + 1);
   else if (e.key === 'k') show(state.idx - 1);
   else if (e.key === 'o' && state.items[state.idx]) window.open(state.items[state.idx].link, '_blank', 'noopener');
