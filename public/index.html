@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lazarus Reader 🪦</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1>🪦 Lazarus Reader</h1>
+    <form id="add-form">
+      <input id="add-url" type="url" placeholder="Paste an RSS or Atom URL to raise from the dead…" required />
+      <button>Summon</button>
+    </form>
+    <div class="tools">
+      <label><input type="checkbox" id="unread-only" checked /> Unread only</label>
+      <button id="refresh" title="Refresh (r)">↻</button>
+      <a href="/api/opml" title="Export OPML">⇩ OPML</a>
+      <label class="file" title="Import OPML">⇧ OPML<input type="file" id="opml" accept=".opml,.xml" hidden /></label>
+    </div>
+  </header>
+  <main>
+    <nav id="feeds"></nav>
+    <section id="items"></section>
+    <article id="reader"><p class="empty">Select a post. Keys: j / k move · o open · m read/unread · r refresh</p></article>
+  </main>
+  <div id="toast"></div>
+  <script src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+node_modules/
+data/
+.DS_Store
+*.log
+# NOTE: .kiro/ must stay committed (Kiroween rule). Never add it here.
